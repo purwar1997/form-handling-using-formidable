@@ -1,0 +1,21 @@
+{
+  "name": "form-handling",
+  "version": "1.0.0",
+  "description": "An express.js project to learn form handling using formidable",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "nodemon index.js"
+  },
+  "author": "Shubham Purwar",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "ejs": "^3.1.8",
+    "express": "^4.18.2",
+    "formidable": "^2.1.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.21"
+  }
+}
