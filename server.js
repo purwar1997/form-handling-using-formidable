@@ -1,6 +1,17 @@
 const express = require('express');
 const formidable = require('formidable');
+const { v4: uuidv4 } = require('uuid');
+const fs = require('fs');
+const client = require('./config/s3.config');
 const config = require('./config/config');
+
+const {
+  PutObjectCommand,
+  GetObjectCommand,
+  ListObjectsV2Command,
+  DeleteObjectCommand,
+  DeleteObjectsCommand,
+} = require('@aws-sdk/client-s3');
 
 const app = express();
 
@@ -32,7 +43,7 @@ app.post('/api/upload', (req, res) => {
       console.log(fields, files);
 
       if (!fields || Object.keys(fields).length === 0) {
-        throw new Error('Fields not passed');
+        throw new Error('Fields not present');
       }
 
       const { name, email, password } = fields;
@@ -45,12 +56,130 @@ app.post('/api/upload', (req, res) => {
         throw new Error('Files not uploaded');
       }
 
+      let { profilePhotos } = files;
+
+      if (!Array.isArray(profilePhotos)) {
+        profilePhotos = [profilePhotos];
+      }
+
+      profilePhotos.forEach(async ({ filepath, mimetype }) => {
+        const data = fs.readFileSync(filepath);
+
+        const command = new PutObjectCommand({
+          Bucket: config.S3_BUCKET,
+          Key: uuidv4(),
+          Body: data,
+          ContentType: mimetype,
+        });
+
+        await client.send(command);
+      });
+
       res.status(200).json({
         name,
         email,
         password,
-        files,
+        profilePhotos,
       });
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+app.get('/api/fetch/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new Error('Please provide an id');
+    }
+
+    const command = new GetObjectCommand({
+      Bucket: config.S3_BUCKET,
+      Key: id,
+    });
+
+    const response = await client.send(command);
+
+    res.status(200).json({
+      success: true,
+      response,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+app.get('/api/fetch/all', async (_req, res) => {
+  try {
+    const command = new ListObjectsV2Command({
+      Bucket: config.S3_BUCKET,
+    });
+
+    const response = await client.send(command);
+
+    res.status(200).json({
+      success: true,
+      response,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+app.put('/api/delete/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      throw new Error('Please provide an id');
+    }
+
+    const command = new DeleteObjectCommand({
+      Bucket: config.S3_BUCKET,
+      Key: id,
+    });
+
+    const response = await client.send(command);
+
+    res.status(200).json({
+      success: true,
+      response,
+    });
+  } catch (err) {
+    res.status(400).json({
+      success: false,
+      message: err.message,
+    });
+  }
+});
+
+app.put('/api/delete/all', async (req, res) => {
+  try {
+    const { keys } = req.body;
+
+    const command = new DeleteObjectsCommand({
+      Bucket: config.S3_BUCKET,
+      Delete: {
+        Objects: keys,
+      },
+    });
+
+    const response = await client.send(command);
+
+    res.status(200).json({
+      success: true,
+      response,
     });
   } catch (err) {
     res.status(400).json({
