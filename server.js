@@ -40,8 +40,6 @@ app.post('/api/upload', (req, res) => {
         throw new Error('Error parsing form data');
       }
 
-      console.log(fields, files);
-
       if (!fields || Object.keys(fields).length === 0) {
         throw new Error('Fields not present');
       }
@@ -166,7 +164,11 @@ app.put('/api/delete/:id', async (req, res) => {
 
 app.put('/api/delete/all', async (req, res) => {
   try {
-    const { keys } = req.body;
+    let { keys } = req.body;
+
+    keys = keys.map(key => {
+      return { Key: key };
+    });
 
     const command = new DeleteObjectsCommand({
       Bucket: config.S3_BUCKET,
