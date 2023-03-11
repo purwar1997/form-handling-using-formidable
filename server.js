@@ -17,7 +17,6 @@ const app = express();
 
 app.set('view-engine', 'ejs');
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 
 app.get('/api', (_req, res) => {
   res.status(200).render('form.ejs');
@@ -41,7 +40,7 @@ app.post('/api/upload', (req, res) => {
       }
 
       if (!fields || Object.keys(fields).length === 0) {
-        throw new Error('Fields not present');
+        throw new Error('Fields not provided');
       }
 
       const { name, email, password } = fields;
