@@ -72,11 +72,14 @@ app.post('/api/upload', (req, res) => {
         await client.send(command);
       });
 
-      res.status(200).json({
-        name,
-        email,
-        password,
-        profilePhotos,
+      res.status(201).json({
+        success: true,
+        message: 'Files successfully uploaded',
+        data: {
+          name,
+          email,
+          password,
+        },
       });
     });
   } catch (err) {
@@ -104,6 +107,7 @@ app.get('/api/fetch/:id', async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: 'File successfully fetched',
       response,
     });
   } catch (err) {
@@ -114,7 +118,7 @@ app.get('/api/fetch/:id', async (req, res) => {
   }
 });
 
-app.get('/api/fetch/all', async (_req, res) => {
+app.get('/api/fetch', async (_req, res) => {
   try {
     const command = new ListObjectsV2Command({
       Bucket: config.S3_BUCKET,
@@ -124,6 +128,7 @@ app.get('/api/fetch/all', async (_req, res) => {
 
     res.status(200).json({
       success: true,
+      message: 'Files successfully fetched',
       response,
     });
   } catch (err) {
@@ -134,7 +139,7 @@ app.get('/api/fetch/all', async (_req, res) => {
   }
 });
 
-app.put('/api/delete/:id', async (req, res) => {
+app.delete('/api/delete/:id', async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -151,6 +156,7 @@ app.put('/api/delete/:id', async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: 'File successfully deleted',
       response,
     });
   } catch (err) {
@@ -161,9 +167,9 @@ app.put('/api/delete/:id', async (req, res) => {
   }
 });
 
-app.put('/api/delete/all', async (req, res) => {
+app.delete('/api/delete', async (req, res) => {
   try {
-    let { keys } = req.body;
+    let { keys } = req.query;
 
     keys = keys.map(key => {
       return { Key: key };
@@ -180,6 +186,7 @@ app.put('/api/delete/all', async (req, res) => {
 
     res.status(200).json({
       success: true,
+      message: 'Files successfully deleted',
       response,
     });
   } catch (err) {
